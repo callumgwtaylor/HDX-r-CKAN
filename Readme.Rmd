@@ -1,0 +1,112 @@
+---
+title: "HDX-r-ckan"
+author: "Callum Taylor"
+date: "28 February 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## HDX
+
+This is an attempt to clarify how to access the Humanitarian Data Exchange and its datasets via R.
+HDX is found at <http://data.humdata.org/>.
+
+I've tried to use the ckanr package from ROpenSci, and packages from the tidyverse to display clean interpretable data
+
+```{r package, echo=TRUE, warning = FALSE}
+library(ckanr)
+library(tidyverse)
+library(lubridate)
+library(jsonlite)
+```
+
+## Connecting to HDX
+### ckanr_setup
+
+ckan_r setup will connect us to HDX
+`r ckanr_setup(url = "http://data.humdata.org/")`
+## Structure
+
+### Packages
+#### package_list
+
+Each dataset on HDX is stored as a CKAN package
+```{r all_packages}
+# package_list will show available packages, it usually has a limit of 31
+all_packages <- package_list(as = 'table', limit = 5000)
+all_packages <- as.data.frame(all_packages)
+```
+
+#### package_search
+
+```{r package_search}
+# package_search can use text titles of the package for searching, it may provide more than one result
+package_search_results <- package_search("migrant deaths by month")
+
+# The structure of package search results is as follows
+str(package_search_results, max.level = 1)
+
+# $count is an integer value of the number of results to that search
+# $results is a list of the results from the search
+```
+
+```{r package_search_results}
+str(package_search_results$results[[1]], max.level = 1)
+```
+
+#### package_show - to download HDX datasets
+```{r package_show}
+# package_show will download the selected package (OHDX dataset), when it has the id to use
+
+# Gaining the dataset ID
+first_search_result <- package_search_results$results[[1]] # This selects the first result from our search of datasets
+dataset_title <- as.character(first_search_result$title) # This extracts the title so we can check we're on the right track
+dataset_id <- as.character(first_search_result$id) # This extracts the id for that package
+# Downloading the dataset itself
+dataset <- package_show(first_search_result$id) # This will download the dataset
+```
+
+### Tags
+####tag_list
+
+Each tag is stored as a CKAN tag
+```{r all_tags}
+# tag_list will show available tags
+all_tags <- tag_list(as = 'table')
+```
+
+### Groups
+#### group_list
+
+Each country on HDX is stored as a CKAN group
+```{r all_groups}
+# group_list will show available CKAN groups. On HDX these mainly appear to be countries, however there are also some events such as the Nepal Earthquake.
+all_groups <- group_list(as = 'table')
+```
+
+
+#### group_show
+
+```{r group_show}
+#Each country on HDX has an id, you can get the id from the group_list
+
+# group_show will download information about all packages related to the country specified
+afghanistan <- group_show('afg', as = 'table') #afg is the id
+```
+
+##### variables in group
+
+```{r country_variables}
+# For example:
+afghanistan$display_name #Lists country name
+afghanistan$name #Country code for each group
+afghanistan$package_count #Lists amount of datasets associated
+
+# afghanistan$packages Countains info about all data sets
+
+head(afghanistan$packages, n = 0) #this will show the list of variables when looking specifically the country's datasets
+```
+

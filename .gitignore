@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+1_import.R
+9_cleanup.R
+migrant_deaths.Rmd
+migrant_deaths.R
+migrant_deaths.html
