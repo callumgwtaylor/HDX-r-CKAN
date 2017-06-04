@@ -1,0 +1,44 @@
+---
+title: "hum_functions"
+output: html_notebook
+---
+
+```{r package, echo=TRUE, warning = FALSE, message=FALSE}
+library(ckanr)
+library(tidyverse)
+library(tidyjson)
+```
+
+```{r hdx_connect, echo=TRUE, warning = FALSE}
+# This creates a function to connect to the hdx server
+hdx_connect <- function(){
+ckanr_setup(url = "http://data.humdata.org/")
+}
+```
+
+```{r hdx_list, echo=TRUE, warning = FALSE}
+# This function will create a data frame of the length set in x, listing the packages in x
+hdx_list <- function(limit){
+package_list(as = 'table', limit = limit) %>%
+as_data_frame(.)
+}
+``` 
+
+```{r hdx_package_search}
+hdx_package_search <- function(term){
+package_search(q = term, as = "json") %>%
+    jsonlite::fromJSON(., flatten = TRUE) %>%
+    .$result %>%
+    .$results 
+}
+```
+
+```{r hdx_resource_list}
+# This function will take the results of a package_search and extract the resources, it will then link those resources to the results from package search giving a new data frame
+hdx_resource_list <- function(package){
+package$resources %>%
+    as.data.frame(.) %>%
+    left_join(package, ., by = c("id" = "package_id")) %>%
+    select(-resources)
+}
+```
