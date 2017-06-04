@@ -1,0 +1,44 @@
+---
+title: "hum_explore"
+output: html_notebook
+---
+
+```{r data_frame}
+library(purrr)
+library(readxl)
+library(httr)
+library(rnaturalearth)
+library(sf)
+library(gganimate)
+library(ggplot2)
+
+hdx_connect()
+
+hum_data_packages <- hdx_package_search("ACLED Conflict Data for Africa") %>%
+  filter(title == "ACLED Conflict Data for Africa (Realtime - 2017)")
+
+hum_data_resources <- hdx_resource_list(hum_data_packages) %>%
+  filter(format == "XLSX")
+```
+
+
+```{r download_resources}
+url <- hum_data_resources$hdx_rel_url
+GET(url, write_disk("dataset.xlsx", overwrite=TRUE))
+ACLED_CONFLICT_DATA <- read_excel("dataset.xlsx", col_names = TRUE)
+rm(url)
+```
+
+```{r maps, fig.width=20}
+
+world <- rnaturalearth::ne_coastline(returnclass = 'sf')
+
+plot <- ACLED_CONFLICT_DATA %>%
+  filter(YEAR == 2017) %>%
+  ggplot() +
+  geom_sf(data = world) +
+  geom_point(aes(x = LONGITUDE, y = LATITUDE, size = FATALITIES, colour = EVENT_TYPE, frame = EVENT_DATE)) +
+  theme(legend.position = "bottom")
+
+gganimate(plot, ani.width=1000, ani.height=500)
+```
